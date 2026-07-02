@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { sendMessage } from '../services/whatsapp';
+import { routeMessage } from '../handlers';
 
 const router = Router();
 
@@ -27,21 +27,10 @@ router.post('/', (req: Request, res: Response) => {
     return;
   }
 
-  const entry = body.entry?.[0];
-  const change = entry?.changes?.[0];
-  const value = change?.value;
-  const messages = value?.messages;
+  const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
 
-  if (!messages || messages.length === 0) {
-    // Delivery receipt or status update — acknowledge and ignore
-    res.sendStatus(200);
-    return;
-  }
-
-  const message = messages[0];
-
-  // Only handle text messages for now
-  if (message.type !== 'text') {
+  if (!message || message.type !== 'text') {
+    // Status update, non-text, or empty — acknowledge and ignore
     res.sendStatus(200);
     return;
   }
@@ -54,9 +43,8 @@ router.post('/', (req: Request, res: Response) => {
   // Acknowledge Meta immediately — process async so we don't timeout
   res.sendStatus(200);
 
-  // Echo the message back (Step 2 — will be replaced with intent router in Step 5)
-  sendMessage(from, `Echo: ${text}`).catch((err) =>
-    console.error('Failed to send reply:', err)
+  routeMessage(from, text).catch((err: unknown) =>
+    console.error('Handler error:', err)
   );
 });
 
