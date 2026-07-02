@@ -23,7 +23,7 @@ export function isAffirmative(text: string): boolean {
 
 export async function confirmDeleteAll(from: string): Promise<void> {
   pendingDeleteAll.delete(from);
-  const res = await Expense.deleteMany({});
+  const res = await Expense.deleteMany({ user: from });
   await sendMessage(from, `🗑️ Deleted all ${res.deletedCount} expense(s). Fresh start!`);
 }
 
@@ -36,7 +36,7 @@ export async function handleEdit(from: string, text: string): Promise<void> {
 
   switch (cmd.action) {
     case 'delete_last': {
-      const last = await Expense.findOne().sort({ timestamp: -1 });
+      const last = await Expense.findOne({ user: from }).sort({ timestamp: -1 });
       if (!last) {
         await sendMessage(from, 'Nothing to delete — no expenses logged yet.');
         return;
@@ -47,7 +47,7 @@ export async function handleEdit(from: string, text: string): Promise<void> {
     }
 
     case 'delete_all': {
-      const count = await Expense.countDocuments();
+      const count = await Expense.countDocuments({ user: from });
       if (count === 0) {
         await sendMessage(from, 'Nothing to delete — no expenses logged yet.');
         return;
@@ -61,7 +61,7 @@ export async function handleEdit(from: string, text: string): Promise<void> {
     }
 
     case 'correct_amount': {
-      const last = await Expense.findOne().sort({ timestamp: -1 });
+      const last = await Expense.findOne({ user: from }).sort({ timestamp: -1 });
       if (!last) {
         await sendMessage(from, 'Nothing to correct — no expenses logged yet.');
         return;

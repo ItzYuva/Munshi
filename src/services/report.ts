@@ -48,19 +48,19 @@ export interface ReportData {
   allExpenses: ExpenseRow[];
 }
 
-async function monthTotal(monthKey: string): Promise<number> {
+async function monthTotal(user: string, monthKey: string): Promise<number> {
   const { start, end } = monthRange(monthKey);
   const [agg] = await Expense.aggregate([
-    { $match: { timestamp: { $gte: start, $lt: end } } },
+    { $match: { user, timestamp: { $gte: start, $lt: end } } },
     { $group: { _id: null, total: { $sum: '$amount' } } },
   ]);
   return agg?.total ?? 0;
 }
 
-/** Gather all report figures for a "YYYY-MM" month key. */
-export async function getReportData(monthKey: string): Promise<ReportData> {
+/** Gather all report figures for a user's "YYYY-MM" month. */
+export async function getReportData(user: string, monthKey: string): Promise<ReportData> {
   const { start, end } = monthRange(monthKey);
-  const match = { timestamp: { $gte: start, $lt: end } };
+  const match = { user, timestamp: { $gte: start, $lt: end } };
 
   const byCategoryRaw = await Expense.aggregate([
     { $match: match },
@@ -83,7 +83,7 @@ export async function getReportData(monthKey: string): Promise<ReportData> {
   ).map((e) => ({ item: e.item, amount: e.amount }));
 
   const spentByCat = new Map<string, number>(byCategory.map((r) => [r.category, r.total]));
-  const budgets: BudgetRow[] = (await Budget.find({ month: monthKey }).lean()).map((b) => {
+  const budgets: BudgetRow[] = (await Budget.find({ user, month: monthKey }).lean()).map((b) => {
     const spent = spentByCat.get(b.category) ?? 0;
     const status: BudgetRow['status'] =
       spent >= b.limit ? 'over' : spent >= b.limit * 0.8 ? 'warn' : 'ok';
@@ -110,7 +110,7 @@ export async function getReportData(monthKey: string): Promise<ReportData> {
     monthLabel: monthLabel(monthKey),
     grand,
     txns,
-    prevTotal: await monthTotal(previousMonthKey(monthKey)),
+    prevTotal: await monthTotal(user, previousMonthKey(monthKey)),
     byCategory,
     topExpenses,
     budgets,
@@ -158,9 +158,4 @@ export function formatReportText(d: ReportData): string {
   }
 
   return lines.join('\n');
-}
-
-/** Convenience: build the text report for a month directly. */
-export async function generateReport(monthKey: string): Promise<string> {
-  return formatReportText(await getReportData(monthKey));
 }

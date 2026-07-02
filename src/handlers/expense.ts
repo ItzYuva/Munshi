@@ -16,6 +16,7 @@ export async function handleExpense(from: string, text: string): Promise<void> {
 
   await Expense.insertMany(
     expenses.map((e) => ({
+      user: from,
       item: e.item,
       amount: e.amount,
       category: e.category,

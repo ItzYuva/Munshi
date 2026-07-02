@@ -15,7 +15,7 @@ export async function handleBudget(from: string, text: string): Promise<void> {
 
   const month = currentMonthKey();
   await Budget.findOneAndUpdate(
-    { category: cmd.category, month },
+    { user: from, category: cmd.category, month },
     { $set: { limit: cmd.limit } },
     { upsert: true }
   );
@@ -29,7 +29,7 @@ export async function handleBudget(from: string, text: string): Promise<void> {
 // List current-month budgets with how much has been spent against each.
 async function showBudgets(from: string): Promise<void> {
   const month = currentMonthKey();
-  const budgets = await Budget.find({ month }).lean();
+  const budgets = await Budget.find({ user: from, month }).lean();
 
   if (budgets.length === 0) {
     await sendMessage(
@@ -41,7 +41,7 @@ async function showBudgets(from: string): Promise<void> {
 
   const monthStart = startOf('month');
   const spentRows = await Expense.aggregate([
-    { $match: { timestamp: { $gte: monthStart } } },
+    { $match: { user: from, timestamp: { $gte: monthStart } } },
     { $group: { _id: '$category', total: { $sum: '$amount' } } },
   ]);
   const spentByCat = new Map<string, number>(spentRows.map((r) => [r._id, r.total]));
@@ -71,11 +71,11 @@ export async function checkBudgetAlerts(
   const monthStart = startOf('month');
 
   for (const [category, added] of addedByCategory) {
-    const budget = await Budget.findOne({ category, month }).lean();
+    const budget = await Budget.findOne({ user: from, category, month }).lean();
     if (!budget) continue;
 
     const [agg] = await Expense.aggregate([
-      { $match: { category, timestamp: { $gte: monthStart } } },
+      { $match: { user: from, category, timestamp: { $gte: monthStart } } },
       { $group: { _id: null, total: { $sum: '$amount' } } },
     ]);
     const spentAfter = agg?.total ?? 0;

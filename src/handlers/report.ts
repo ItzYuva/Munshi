@@ -23,7 +23,7 @@ export function wantsPdf(text: string): boolean {
 
 async function sendPdfReport(from: string, monthKey: string): Promise<void> {
   pendingPdfOffer.delete(from);
-  const data = await getReportData(monthKey);
+  const data = await getReportData(from, monthKey);
   if (data.txns === 0) {
     await sendMessage(from, 'No expenses logged this month yet — nothing to put in a PDF.');
     return;
@@ -48,7 +48,7 @@ export async function handleReport(from: string, text: string): Promise<void> {
     return;
   }
 
-  const data = await getReportData(monthKey);
+  const data = await getReportData(from, monthKey);
   await sendMessage(from, formatReportText(data));
 
   if (data.txns > 0) {
