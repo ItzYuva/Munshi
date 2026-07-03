@@ -10,7 +10,7 @@ const DEFAULT: Currency = { symbol: '₹', pdf: 'Rs.' };
 
 // Country calling code -> currency.
 const MAP: Record<string, Currency> = {
-  '91': { symbol: '₹', pdf: 'Rs.' }, // India
+  '91': { symbol: '₹', pdf: 'Rs. ' }, // India
   '44': { symbol: '£', pdf: '£' }, // UK
   '1': { symbol: '$', pdf: '$' }, // US / Canada
   '971': { symbol: 'AED ', pdf: 'AED ' }, // UAE
@@ -21,9 +21,9 @@ const MAP: Record<string, Currency> = {
   '33': { symbol: '€', pdf: '€' }, // France
   '39': { symbol: '€', pdf: '€' }, // Italy
   '34': { symbol: '€', pdf: '€' }, // Spain
-  '92': { symbol: '₨', pdf: 'Rs.' }, // Pakistan
-  '94': { symbol: '₨', pdf: 'Rs.' }, // Sri Lanka
-  '977': { symbol: '₨', pdf: 'Rs.' }, // Nepal
+  '92': { symbol: '₨', pdf: 'Rs. ' }, // Pakistan
+  '94': { symbol: '₨', pdf: 'Rs. ' }, // Sri Lanka
+  '977': { symbol: '₨', pdf: 'Rs. ' }, // Nepal
   '880': { symbol: '৳', pdf: 'BDT ' }, // Bangladesh
 };
 

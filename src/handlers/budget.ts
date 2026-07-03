@@ -3,6 +3,7 @@ import { sendMessage } from '../services/whatsapp';
 import { Budget } from '../models/Budget';
 import { Expense } from '../models/Expense';
 import { startOf, currentMonthKey, daysLeftInMonth } from '../services/dateRange';
+import { symbolFor } from '../services/currency';
 
 export async function handleBudget(from: string, text: string): Promise<void> {
   const cmd = await parseBudgetCommand(text);
@@ -22,7 +23,7 @@ export async function handleBudget(from: string, text: string): Promise<void> {
 
   await sendMessage(
     from,
-    `Got it 👍 ${cmd.category} budget set to ₹${cmd.limit} for this month.`
+    `Got it 👍 ${cmd.category} budget set to ${symbolFor(from)}${cmd.limit} for this month.`
   );
 }
 
@@ -45,12 +46,13 @@ async function showBudgets(from: string): Promise<void> {
     { $group: { _id: '$category', total: { $sum: '$amount' } } },
   ]);
   const spentByCat = new Map<string, number>(spentRows.map((r) => [r._id, r.total]));
+  const cur = symbolFor(from);
 
   const lines = budgets.map((b) => {
     const spent = spentByCat.get(b.category) ?? 0;
     const pct = Math.round((spent / b.limit) * 100);
     const icon = spent >= b.limit ? '🚨' : spent >= b.limit * 0.8 ? '⚠️' : '✅';
-    return `${icon} ${b.category}: ₹${spent} / ₹${b.limit} (${pct}%)`;
+    return `${icon} ${b.category}: ${cur}${spent} / ${cur}${b.limit} (${pct}%)`;
   });
 
   await sendMessage(from, `*Your budgets this month:*\n${lines.join('\n')}`);
@@ -69,6 +71,7 @@ export async function checkBudgetAlerts(
 ): Promise<void> {
   const month = currentMonthKey();
   const monthStart = startOf('month');
+  const cur = symbolFor(from);
 
   for (const [category, added] of addedByCategory) {
     const budget = await Budget.findOne({ user: from, category, month }).lean();
@@ -88,13 +91,13 @@ export async function checkBudgetAlerts(
     if (spentBefore < limit && spentAfter >= limit) {
       await sendMessage(
         from,
-        `🚨 ${category} budget of ₹${limit} exceeded! Currently at ₹${spentAfter}.`
+        `🚨 ${category} budget of ${cur}${limit} exceeded! Currently at ${cur}${spentAfter}.`
       );
     } else if (spentBefore < warnAt && spentAfter >= warnAt) {
       const daysLeft = daysLeftInMonth();
       await sendMessage(
         from,
-        `⚠️ You've spent ₹${spentAfter} of your ₹${limit} ${category} budget. ${daysLeft} days left.`
+        `⚠️ You've spent ${cur}${spentAfter} of your ${cur}${limit} ${category} budget. ${daysLeft} days left.`
       );
     }
   }

@@ -82,11 +82,12 @@ export type Category =
   | 'rent'
   | 'misc';
 
-const PARSE_PROMPT = `You are an expense parser for an Indian personal finance bot. Extract expenses from the user's message and return a JSON array.
+const PARSE_PROMPT = `You are an expense parser for a personal finance bot (users may be in India, UK, US, etc.). Extract expenses from the user's message and return a JSON array.
 
 Categories: food, transport, groceries, entertainment, utilities, shopping, health, rent, misc
 
 Rules:
+- "amount" is just the numeric value — ignore any currency symbol or word (₹, rs, £, $, €, "pounds", "dollars")
 - Return ONLY a valid JSON array, no markdown, no explanation
 - Each object: { "item": string, "amount": number, "category": string }
 - Amount must be a positive number
@@ -107,6 +108,9 @@ Examples:
 "electricity bill 1200" → [{"item":"Electricity Bill","amount":1200,"category":"utilities"}]
 "rent 12000" → [{"item":"Rent","amount":12000,"category":"rent"}]
 "house rent 8500" → [{"item":"House Rent","amount":8500,"category":"rent"}]
+"coffee £5" → [{"item":"Coffee","amount":5,"category":"food"}]
+"uber $12" → [{"item":"Uber","amount":12,"category":"transport"}]
+"lunch 8 pounds" → [{"item":"Lunch","amount":8,"category":"food"}]
 "jeans 999" → [{"item":"Jeans","amount":999,"category":"shopping"}]
 "petrol 500" → [{"item":"Petrol","amount":500,"category":"transport"}]
 "lunch 120 and dinner 200" → [{"item":"Lunch","amount":120,"category":"food"},{"item":"Dinner","amount":200,"category":"food"}]

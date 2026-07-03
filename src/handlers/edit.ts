@@ -1,6 +1,7 @@
 import { parseEditCommand } from '../services/gemini';
 import { sendMessage } from '../services/whatsapp';
 import { Expense } from '../models/Expense';
+import { symbolFor } from '../services/currency';
 
 // Pending "delete all" confirmations, keyed by sender. In-memory is fine for a
 // single-user personal bot; a restart simply clears any pending confirmation.
@@ -42,7 +43,7 @@ export async function handleEdit(from: string, text: string): Promise<void> {
         return;
       }
       await last.deleteOne();
-      await sendMessage(from, `🗑️ Deleted: ${last.item} ₹${last.amount} [${last.category}]`);
+      await sendMessage(from, `🗑️ Deleted: ${last.item} ${symbolFor(from)}${last.amount} [${last.category}]`);
       return;
     }
 
@@ -69,9 +70,10 @@ export async function handleEdit(from: string, text: string): Promise<void> {
       const old = last.amount;
       last.amount = cmd.newAmount;
       await last.save();
+      const cur = symbolFor(from);
       await sendMessage(
         from,
-        `✏️ Updated: ${last.item} ₹${old} → ₹${cmd.newAmount} [${last.category}]`
+        `✏️ Updated: ${last.item} ${cur}${old} → ${cur}${cmd.newAmount} [${last.category}]`
       );
       return;
     }

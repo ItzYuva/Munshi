@@ -2,6 +2,7 @@ import { parseQuery, QueryParams } from '../services/gemini';
 import { sendMessage } from '../services/whatsapp';
 import { startOf, timeframeLabel, formatDay } from '../services/dateRange';
 import { Expense } from '../models/Expense';
+import { symbolFor } from '../services/currency';
 
 const LIST_LIMIT = 15;
 
@@ -36,6 +37,7 @@ function baseFilter(user: string, q: QueryParams): ExpenseFilter {
 
 async function computeFacts(user: string, q: QueryParams): Promise<string> {
   const label = timeframeLabel(q.timeframe);
+  const cur = symbolFor(user);
 
   switch (q.metric) {
     case 'total': {
@@ -46,7 +48,7 @@ async function computeFacts(user: string, q: QueryParams): Promise<string> {
       const total = agg?.total ?? 0;
       const count = agg?.count ?? 0;
       const scope = q.category ? `on ${q.category}` : 'overall';
-      return `Total spent ${scope} ${label}: ₹${total} across ${count} transaction(s).`;
+      return `Total spent ${scope} ${label}: ${cur}${total} across ${count} transaction(s).`;
     }
 
     case 'count': {
@@ -58,7 +60,7 @@ async function computeFacts(user: string, q: QueryParams): Promise<string> {
     case 'biggest': {
       const top = await Expense.findOne(baseFilter(user, q)).sort({ amount: -1 }).lean();
       if (!top) return `No expenses found ${label}.`;
-      return `Biggest expense ${label}: ${top.item} ₹${top.amount} (${top.category}).`;
+      return `Biggest expense ${label}: ${top.item} ${cur}${top.amount} (${top.category}).`;
     }
 
     case 'breakdown': {
@@ -69,8 +71,8 @@ async function computeFacts(user: string, q: QueryParams): Promise<string> {
       ]);
       if (rows.length === 0) return `No expenses found ${label}.`;
       const grand = rows.reduce((s, r) => s + r.total, 0);
-      const parts = rows.map((r) => `${r._id}: ₹${r.total}`).join(', ');
-      return `Spending breakdown ${label} (total ₹${grand}): ${parts}.`;
+      const parts = rows.map((r) => `${r._id}: ${cur}${r.total}`).join(', ');
+      return `Spending breakdown ${label} (total ${cur}${grand}): ${parts}.`;
     }
 
     case 'compare': {
@@ -82,7 +84,7 @@ async function computeFacts(user: string, q: QueryParams): Promise<string> {
       ]);
       const totA = rows.find((r) => r._id === a)?.total ?? 0;
       const totB = rows.find((r) => r._id === b)?.total ?? 0;
-      return `${label}: ${a} ₹${totA} vs ${b} ₹${totB}.`;
+      return `${label}: ${a} ${cur}${totA} vs ${b} ${cur}${totB}.`;
     }
 
     case 'list': {
@@ -100,10 +102,10 @@ async function computeFacts(user: string, q: QueryParams): Promise<string> {
 
       const scope = q.category ? `${q.category} ` : '';
       const lines = items.map(
-        (e) => `• ${formatDay(e.timestamp)} — ${e.item} ₹${e.amount} [${e.category}]`
+        (e) => `• ${formatDay(e.timestamp)} — ${e.item} ${cur}${e.amount} [${e.category}]`
       );
       const more = count > LIST_LIMIT ? `\n…showing latest ${LIST_LIMIT} of ${count}` : '';
-      return `*Your ${scope}expenses (${label}):*\n${lines.join('\n')}${more}\n\nTotal: ₹${grand} (${count} items)`;
+      return `*Your ${scope}expenses (${label}):*\n${lines.join('\n')}${more}\n\nTotal: ${cur}${grand} (${count} items)`;
     }
   }
 }

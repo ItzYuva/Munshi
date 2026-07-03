@@ -1,6 +1,7 @@
 import { Expense } from '../models/Expense';
 import { Budget } from '../models/Budget';
 import { monthRange, monthLabel, previousMonthKey } from './dateRange';
+import { currencyFor } from './currency';
 
 export const CATEGORY_EMOJI: Record<string, string> = {
   food: '🍽',
@@ -39,6 +40,8 @@ export interface ExpenseRow {
 export interface ReportData {
   monthKey: string;
   monthLabel: string;
+  currencySymbol: string; // for WhatsApp text (₹, £, $, …)
+  currencyPdf: string; // PDF-safe form (Rs., £, $, …)
   grand: number;
   txns: number;
   prevTotal: number;
@@ -105,9 +108,12 @@ export async function getReportData(user: string, monthKey: string): Promise<Rep
     category: e.category,
   }));
 
+  const cur = currencyFor(user);
   return {
     monthKey,
     monthLabel: monthLabel(monthKey),
+    currencySymbol: cur.symbol,
+    currencyPdf: cur.pdf,
     grand,
     txns,
     prevTotal: await monthTotal(user, previousMonthKey(monthKey)),
@@ -124,36 +130,37 @@ export function formatReportText(d: ReportData): string {
     return `📊 *Munshi Report — ${d.monthLabel}*\n\nNo expenses logged this month.`;
   }
 
+  const cur = d.currencySymbol;
   const lines: string[] = [];
   lines.push(`📊 *Munshi Report — ${d.monthLabel}*`);
   lines.push('');
-  lines.push(`💸 Total spent: *₹${d.grand}* (${d.txns} txns)`);
+  lines.push(`💸 Total spent: *${cur}${d.grand}* (${d.txns} txns)`);
 
   if (d.prevTotal > 0) {
     const diff = d.grand - d.prevTotal;
     const pct = Math.round((diff / d.prevTotal) * 100);
     const arrow = diff > 0 ? '📈' : diff < 0 ? '📉' : '➡️';
     const sign = diff > 0 ? '+' : '';
-    lines.push(`${arrow} vs last month: ${sign}${pct}% (₹${d.prevTotal} → ₹${d.grand})`);
+    lines.push(`${arrow} vs last month: ${sign}${pct}% (${cur}${d.prevTotal} → ${cur}${d.grand})`);
   }
 
   lines.push('');
   lines.push('*By category:*');
   for (const r of d.byCategory) {
     const emoji = CATEGORY_EMOJI[r.category] ?? '•';
-    lines.push(`${emoji} ${r.category}: ₹${r.total} (${r.pct}%)`);
+    lines.push(`${emoji} ${r.category}: ${cur}${r.total} (${r.pct}%)`);
   }
 
   lines.push('');
   lines.push('*Top expenses:*');
-  d.topExpenses.forEach((e, i) => lines.push(`${i + 1}. ${e.item} ₹${e.amount}`));
+  d.topExpenses.forEach((e, i) => lines.push(`${i + 1}. ${e.item} ${cur}${e.amount}`));
 
   if (d.budgets.length > 0) {
     lines.push('');
     lines.push('*Budgets:*');
     for (const b of d.budgets) {
       const icon = b.status === 'over' ? '🚨' : b.status === 'warn' ? '⚠️' : '✅';
-      lines.push(`${icon} ${b.category}: ₹${b.spent} / ₹${b.limit} (${b.pct}%)`);
+      lines.push(`${icon} ${b.category}: ${cur}${b.spent} / ${cur}${b.limit} (${b.pct}%)`);
     }
   }
 

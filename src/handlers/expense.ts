@@ -2,6 +2,7 @@ import { parseExpenses } from '../services/gemini';
 import { sendMessage } from '../services/whatsapp';
 import { Expense } from '../models/Expense';
 import { checkBudgetAlerts } from './budget';
+import { symbolFor } from '../services/currency';
 
 export async function handleExpense(from: string, text: string): Promise<void> {
   const expenses = await parseExpenses(text);
@@ -24,9 +25,10 @@ export async function handleExpense(from: string, text: string): Promise<void> {
     }))
   );
 
-  const lines = expenses.map((e) => `• ${e.item} ₹${e.amount} [${e.category}]`);
+  const cur = symbolFor(from);
+  const lines = expenses.map((e) => `• ${e.item} ${cur}${e.amount} [${e.category}]`);
   const total = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const footer = expenses.length > 1 ? `\nTotal: ₹${total}` : '';
+  const footer = expenses.length > 1 ? `\nTotal: ${cur}${total}` : '';
   await sendMessage(from, `Logged ✅\n${lines.join('\n')}${footer}`);
 
   // Sum amounts per category in this batch, then check for budget crossings
