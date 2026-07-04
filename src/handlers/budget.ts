@@ -1,5 +1,5 @@
 import { parseBudgetCommand } from '../services/gemini';
-import { sendMessage } from '../services/whatsapp';
+import { sendMessage } from '../services/messenger';
 import { Budget } from '../models/Budget';
 import { Expense } from '../models/Expense';
 import { startOf, currentMonthKey, daysLeftInMonth } from '../services/dateRange';

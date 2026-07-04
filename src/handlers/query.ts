@@ -1,5 +1,5 @@
 import { parseQuery, QueryParams } from '../services/gemini';
-import { sendMessage } from '../services/whatsapp';
+import { sendMessage } from '../services/messenger';
 import { startOf, timeframeLabel, formatDay } from '../services/dateRange';
 import { Expense } from '../models/Expense';
 import { symbolFor } from '../services/currency';

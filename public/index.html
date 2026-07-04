@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Munshi — Keep your accounts by just texting</title>
+  <meta name="description" content="Munshi is a WhatsApp bot that logs your expenses from casual texts, in English, Hindi, or Hinglish." />
+  <style>
+    :root {
+      --paper: #0e1611; --card: #14201a; --ink: #e7eee9; --muted: #93a59a; --faint: #66756c;
+      --line: #223029; --accent: #3fae86; --accent-ink: #7ad4b0; --stamp: #e0ad57;
+      --user-bubble: #2c7a5c; --user-ink: #f2fbf6; --bot-bubble: #1b2a22; --over: #e08163;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 38px rgba(0,0,0,.42);
+      --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+      --sans: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Menlo, Consolas, monospace;
+      --hand: 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+    .wrap { width: min(1080px, 92vw); margin-inline: auto; }
+    a { color: inherit; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 5px; }
+
+    header { border-bottom: 1px solid var(--line); }
+    .nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; }
+    .mark { font-family: var(--serif); font-size: 25px; font-weight: 700; letter-spacing: -.01em; }
+    .nav-right { display: flex; align-items: center; gap: 22px; }
+    .nav-right a { text-decoration: none; color: var(--muted); font-size: 14.5px; font-weight: 500; }
+    .nav-right a:hover { color: var(--ink); }
+
+    .hero { display: grid; grid-template-columns: 1fr 400px; gap: 56px; align-items: center; padding: 40px 0 60px; position: relative; }
+    @media (max-width: 900px) { .hero { grid-template-columns: 1fr; gap: 40px; } }
+    .eyebrow { font-family: var(--mono); font-size: 12.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--accent); display: inline-flex; align-items: center; gap: 9px; margin-bottom: 18px; }
+    .eyebrow::before { content: ""; width: 22px; height: 1.5px; background: var(--stamp); }
+    h1 { font-family: var(--serif); font-weight: 700; font-size: clamp(34px, 5vw, 54px); line-height: 1.05; letter-spacing: -.02em; margin: 0 0 18px; text-wrap: balance; }
+    h1 em { font-style: italic; color: var(--accent); }
+    .lede { font-size: 17px; color: var(--muted); max-width: 48ch; margin: 0 0 30px; }
+    .lede p { margin: 0 0 13px; }
+    .lede p:last-child { margin: 0; }
+    .lede b { color: var(--ink); font-weight: 600; }
+    .cta-row { display: flex; flex-wrap: wrap; gap: 13px; align-items: center; }
+    .btn { font-size: 15px; font-weight: 600; text-decoration: none; padding: 12px 21px; border-radius: 11px; cursor: pointer; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 8px; transition: transform .12s ease; }
+    .btn-primary { background: var(--accent); color: #04150e; box-shadow: var(--shadow); }
+    .btn-primary:hover { transform: translateY(-1px); }
+    .btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    .demo-wrap { position: relative; }
+    .doodle { position: absolute; left: -134px; bottom: 34px; width: 150px; text-align: center; pointer-events: none; transform: rotate(-3deg); }
+    .doodle .lbl { font-family: var(--hand); color: var(--stamp); font-size: 18px; line-height: 1.2; display: block; margin-bottom: 4px; }
+    .doodle svg { width: 96px; height: 60px; margin-left: 30px; }
+    @media (max-width: 1040px) { .doodle { display: none; } }
+
+    .phone { background: var(--card); border: 1px solid var(--line); border-radius: 26px; box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; height: 582px; width: 100%; max-width: 400px; margin-inline: auto; }
+    .phone-top { display: flex; align-items: center; gap: 11px; padding: 14px 16px; background: color-mix(in srgb, var(--accent) 18%, var(--card)); color: var(--ink); border-bottom: 1px solid var(--line); flex-shrink: 0; }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: #05160e; display: grid; place-items: center; font-family: var(--serif); font-weight: 700; font-size: 18px; }
+    .phone-top .who { font-weight: 700; font-size: 15px; line-height: 1.15; }
+    .phone-top .status { font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; }
+    .stream { flex: 1; overflow-y: auto; padding: 16px 14px 6px; display: flex; flex-direction: column; gap: 3px; background: radial-gradient(circle at 15% 6%, rgba(63,174,134,.09), transparent 42%), var(--paper); }
+    .row { display: flex; flex-direction: column; margin-bottom: 6px; }
+    .row.me { align-items: flex-end; }
+    .row.bot { align-items: flex-start; }
+    .msg { max-width: 84%; padding: 8px 12px 6px; border-radius: 16px; font-size: 14.5px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; box-shadow: 0 1px 1px rgba(0,0,0,.14); animation: pop .2s ease both; }
+    @keyframes pop { from { opacity: 0; transform: translateY(5px) scale(.98); } }
+    @media (prefers-reduced-motion: reduce) { .msg { animation: none; } html { scroll-behavior: auto; } }
+    .row.bot .msg { background: var(--bot-bubble); border: 1px solid var(--line); border-bottom-left-radius: 5px; color: var(--ink); }
+    .row.me .msg { background: var(--user-bubble); color: var(--user-ink); border-bottom-right-radius: 5px; }
+    .msg .amt { font-family: var(--mono); font-weight: 600; }
+    .row.bot .msg b { color: var(--accent-ink); }
+    .time { font-size: 10px; color: var(--faint); margin: 2px 6px 0; font-variant-numeric: tabular-nums; }
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; padding: 6px 14px 12px; }
+    .chip { font-size: 12.5px; font-family: var(--mono); color: var(--accent); background: transparent; border: 1px dashed color-mix(in srgb, var(--accent) 45%, var(--line)); border-radius: 20px; padding: 5px 11px; cursor: pointer; white-space: nowrap; }
+    .chip:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+    .composer { display: flex; gap: 8px; padding: 11px 12px; border-top: 1px solid var(--line); background: var(--card); flex-shrink: 0; }
+    .composer input { flex: 1; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 22px; padding: 10px 16px; font-size: 14.5px; font-family: var(--sans); outline: none; }
+    .composer input:focus { border-color: var(--accent); }
+    .composer button { width: 42px; height: 42px; border-radius: 50%; border: none; background: var(--accent); color: #04150e; cursor: pointer; font-size: 16px; display: grid; place-items: center; flex-shrink: 0; }
+    .composer button:hover { filter: brightness(1.08); }
+
+    .features { padding: 8px 0 30px; }
+    .sec-head { margin-bottom: 30px; }
+    .kicker { font-family: var(--mono); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--stamp); margin: 0 0 10px; }
+    .sec-head h2 { font-family: var(--serif); font-size: clamp(24px, 3.2vw, 33px); font-weight: 700; letter-spacing: -.015em; margin: 0; }
+    .feat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    @media (max-width: 720px) { .feat-grid { grid-template-columns: 1fr; } }
+    .feat { background: var(--card); border: 1px solid var(--line); border-radius: 15px; padding: 22px; display: flex; gap: 15px; }
+    .feat .ic { width: 38px; height: 38px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); display: grid; place-items: center; flex-shrink: 0; font-size: 17px; }
+    .feat h3 { font-size: 16.5px; margin: 3px 0 5px; font-weight: 650; }
+    .feat p { color: var(--muted); font-size: 14px; margin: 0; }
+    .feat p code { font-family: var(--mono); font-size: 12.5px; background: var(--paper); padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line); color: var(--ink); }
+
+    footer { padding: 30px 0 44px; border-top: 1px solid var(--line); margin-top: 24px; }
+    .foot-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px; align-items: center; color: var(--muted); font-size: 14px; }
+    .foot-row a { color: var(--muted); text-decoration: none; }
+    .foot-row a:hover { color: var(--accent); }
+    .foot-links { display: flex; gap: 20px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <span class="mark">Munshi</span>
+      <div class="nav-right">
+        <a href="#features">Features</a>
+        <a href="https://github.com/ItzYuva/Munshi" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="wrap hero">
+      <div class="hero-copy">
+        <h1>Keep your accounts by just <em>texting</em>.</h1>
+        <div class="lede">
+          <p>Munshi is the friend who happens to be great with money. Tell it what you spent the way you&rsquo;d text anyone — <b>&ldquo;chai 15&rdquo;</b>, <b>&ldquo;auto 50, lunch 120&rdquo;</b>, <b>&ldquo;aaj movie pe 300&rdquo;</b> — and it quietly notes every rupee, files it under the right category, and never forgets.</p>
+          <p>Ask how your month is going, set a budget and get a gentle nudge before you overspend, and receive a tidy report on the 1st. No apps to open, no spreadsheets to keep — just chat, in English, Hindi, or Hinglish.</p>
+        </div>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#demo-input" id="tryBtn">Try the demo</a>
+          <a class="btn btn-ghost" href="https://github.com/ItzYuva/Munshi" target="_blank" rel="noopener">View on GitHub</a>
+        </div>
+      </div>
+
+      <div class="demo-wrap">
+        <div class="doodle" aria-hidden="true">
+          <span class="lbl">type here,<br>it&rsquo;s live!</span>
+          <svg viewBox="0 0 100 62" fill="none">
+            <path d="M6 12 C 34 6, 74 14, 88 44" stroke="var(--stamp)" stroke-width="2.6" stroke-linecap="round"/>
+            <path d="M88 44 L 74 40 M88 44 L 82 30" stroke="var(--stamp)" stroke-width="2.6" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="phone">
+          <div class="phone-top">
+            <div class="avatar">M</div>
+            <div>
+              <div class="who">Munshi</div>
+              <div class="status"><span class="dot"></span> online</div>
+            </div>
+          </div>
+          <div class="stream" id="stream" aria-live="polite"></div>
+          <div class="chips" id="chips"></div>
+          <form class="composer" id="composer">
+            <input id="demo-input" autocomplete="off" maxlength="200" placeholder="Type an expense…" aria-label="Type an expense" />
+            <button type="submit" aria-label="Send">&#10148;</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap features" id="features">
+      <div class="sec-head">
+        <p class="kicker">What Munshi does ?</p>
+        <h2>Everything a good munshi keeps track of.</h2>
+      </div>
+      <div class="feat-grid">
+        <div class="feat"><div class="ic">&#9998;</div><div><h3>Hinglish parsing</h3><p>Reads <code>80rs chicken rice</code>, <code>ola dadar to andheri 150</code>, and multiple items at once.</p></div></div>
+        <div class="feat"><div class="ic">?</div><div><h3>Natural questions</h3><p>Ask <code>kitna kharch hua transport pe</code> or <code>biggest expense this month</code>.</p></div></div>
+        <div class="feat"><div class="ic">&#9684;</div><div><h3>Budgets &amp; alerts</h3><p>Set <code>food budget 3000</code> — get nudged at 80% and again when you cross it.</p></div></div>
+        <div class="feat"><div class="ic">&#9636;</div><div><h3>Monthly PDF report</h3><p>A clean statement on the 1st — breakdown, top spends, and every timestamped entry.</p></div></div>
+        <div class="feat"><div class="ic">&#8377;</div><div><h3>Knows your currency</h3><p>&#8377;, &pound;, $ or &euro; — picked from your number. Each person keeps their own books.</p></div></div>
+        <div class="feat"><div class="ic">&#8635;</div><div><h3>Fix it in a word</h3><p><code>delete last</code> or <code>that was 50 not 500</code> — as casual as the logging.</p></div></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot-row">
+      <span class="mark" style="font-size:19px;">Munshi</span>
+      <div class="foot-links">
+        <a href="https://github.com/ItzYuva/Munshi" target="_blank" rel="noopener">GitHub</a>
+        <a href="#">Built by Aditya</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      // stable per-browser session id
+      var KEY = 'munshi_sid';
+      var sid = localStorage.getItem(KEY);
+      if (!sid) { sid = (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(36).slice(2))).replace(/[^A-Za-z0-9_-]/g, ''); localStorage.setItem(KEY, sid); }
+
+      var stream = document.getElementById('stream');
+      function esc(s) { return s.replace(/[&<>]/g, function (m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]; }); }
+      function fmt(s) { return esc(s).replace(/\*([^*\n]+)\*/g, '<b>$1</b>'); } // WhatsApp *bold* -> <b>
+      function nowTime() { var d = new Date(), h = d.getHours(), m = d.getMinutes(), ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return h + ':' + (m < 10 ? '0' + m : m) + ' ' + ap; }
+
+      function add(html, who) {
+        var row = document.createElement('div'); row.className = 'row ' + who;
+        var msg = document.createElement('div'); msg.className = 'msg'; msg.innerHTML = html;
+        var time = document.createElement('span'); time.className = 'time'; time.textContent = nowTime();
+        row.appendChild(msg); row.appendChild(time); stream.appendChild(row);
+        stream.scrollTop = stream.scrollHeight; return msg;
+      }
+
+      var busy = false;
+      async function send(text) {
+        text = (text || '').trim(); if (!text || busy) return;
+        busy = true;
+        add(esc(text), 'me');
+        var typing = add('<span style="opacity:.6">…</span>', 'bot');
+        try {
+          var r = await fetch('/api/chat', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId: sid, text: text })
+          });
+          var data = await r.json();
+          typing.parentNode.remove();
+          var replies = (data && data.replies) || [];
+          if (!replies.length) add('Hmm, no reply — try again.', 'bot');
+          replies.forEach(function (rep, i) {
+            setTimeout(function () {
+              if (rep.type === 'document') add('&#128196; <b>' + esc(rep.filename) + '</b> ready — PDF export is available on WhatsApp.', 'bot');
+              else add(fmt(rep.text || ''), 'bot');
+            }, i * 260);
+          });
+        } catch (e) {
+          typing.parentNode.remove();
+          add('Couldn&rsquo;t reach Munshi just now — please try again in a moment.', 'bot');
+        } finally { busy = false; }
+      }
+
+      document.getElementById('composer').addEventListener('submit', function (e) {
+        e.preventDefault(); var inp = document.getElementById('demo-input'); var v = inp.value; inp.value = ''; send(v); inp.focus();
+      });
+      document.getElementById('tryBtn').addEventListener('click', function () {
+        setTimeout(function () { document.getElementById('demo-input').focus(); }, 250);
+      });
+
+      var chipWrap = document.getElementById('chips');
+      ['chai 15', 'auto 50, lunch 120', 'how much did I spend?', 'set food budget 500'].forEach(function (c) {
+        var b = document.createElement('button'); b.className = 'chip'; b.type = 'button'; b.textContent = c;
+        b.addEventListener('click', function () { send(c); }); chipWrap.appendChild(b);
+      });
+
+      add("Namaste &#128591; I'm Munshi, your pocket accountant. Text me a spend like <b>chai 15</b> to begin.", 'bot');
+    })();
+  </script>
+</body>
+</html>

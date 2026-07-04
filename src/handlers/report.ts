@@ -1,6 +1,6 @@
 import { getReportData, formatReportText } from '../services/report';
 import { generateReportPdf } from '../services/pdf';
-import { sendMessage, sendDocument } from '../services/whatsapp';
+import { sendMessage, sendDocument } from '../services/messenger';
 import { currentMonthKey } from '../services/dateRange';
 
 // Remember that we offered a PDF, so a plain "pdf" reply works next.

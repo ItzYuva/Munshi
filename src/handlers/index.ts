@@ -1,5 +1,5 @@
 import { classifyIntent } from '../services/gemini';
-import { sendMessage } from '../services/whatsapp';
+import { sendMessage } from '../services/messenger';
 import { handleExpense } from './expense';
 import { handleQuery } from './query';
 import { handleBudget } from './budget';

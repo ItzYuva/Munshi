@@ -1,5 +1,5 @@
 import { parseExpenses } from '../services/gemini';
-import { sendMessage } from '../services/whatsapp';
+import { sendMessage } from '../services/messenger';
 import { Expense } from '../models/Expense';
 import { checkBudgetAlerts } from './budget';
 import { symbolFor } from '../services/currency';

@@ -1,5 +1,5 @@
 import { parseEditCommand } from '../services/gemini';
-import { sendMessage } from '../services/whatsapp';
+import { sendMessage } from '../services/messenger';
 import { Expense } from '../models/Expense';
 import { symbolFor } from '../services/currency';
 

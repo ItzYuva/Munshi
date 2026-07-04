@@ -4,6 +4,7 @@ import { generateReportPdf } from './pdf';
 import { sendMessage, sendDocument } from './whatsapp';
 import { previousMonthKey, currentMonthKey, monthRange } from './dateRange';
 import { Expense } from '../models/Expense';
+import { Budget } from '../models/Budget';
 
 /** Send one user their report (text + PDF) for the given month. */
 async function sendUserReport(user: string, monthKey: string): Promise<void> {
@@ -44,4 +45,23 @@ export function scheduleMonthlyReport(): void {
   );
 
   console.log('Monthly report scheduled (1st of month, 09:00 IST)');
+}
+
+/**
+ * Website demo sessions (user ids like "web:...") are throwaway. Purge their
+ * data every 6 hours so the DB doesn't fill up with anonymous trials.
+ */
+export function scheduleWebDemoCleanup(): void {
+  cron.schedule('0 */6 * * *', async () => {
+    try {
+      const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const e = await Expense.deleteMany({ user: /^web:/, timestamp: { $lt: cutoff } });
+      const b = await Budget.deleteMany({ user: /^web:/ });
+      if (e.deletedCount || b.deletedCount) {
+        console.log(`Web demo cleanup: removed ${e.deletedCount} expenses, ${b.deletedCount} budgets`);
+      }
+    } catch (err) {
+      console.error('Web demo cleanup failed:', err);
+    }
+  });
 }
