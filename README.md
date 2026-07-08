@@ -25,31 +25,6 @@
 
 ---
 
-## Architecture
-
-```
-WhatsApp  ─┐
-           ├─►  Express webhook  ─┐
-Web demo  ─┘   /api/chat         │
-                                 ▼
-                        Intent router (Gemini)
-                                 │
-        ┌────────────┬───────────┼───────────┬────────────┐
-        ▼            ▼           ▼            ▼            ▼
-     expense       query      budget       report        edit
-        └────────────┴───────────┴───────────┴────────────┘
-                                 │
-                    ┌────────────┴────────────┐
-                    ▼                          ▼
-              MongoDB (Atlas)          Gemini 2.5 Flash-Lite
-```
-
-**One brain, two front doors.** A small outbound router (`messenger.ts`) sends replies to WhatsApp for phone numbers, or buffers them as JSON for `web:` sessions — so the identical handler logic serves both WhatsApp and the website demo.
-
-**LLM does language, code does math.** Gemini handles parsing and intent; all totals/aggregations are computed in MongoDB so the numbers are always exact.
-
----
-
 ## Tech Stack
 
 | Layer | Choice |
@@ -62,39 +37,6 @@ Web demo  ─┘   /api/chat         │
 | PDF | PDFKit |
 | Scheduling | node-cron |
 | Hosting | Render |
-
----
-
-## Project Structure
-
-```
-src/
-├── index.ts              # App entry: DB connect, static hosting, cron, listen
-├── routes/
-│   ├── webhook.ts        # WhatsApp webhook (verify + receive)
-│   └── api.ts            # /api/chat — website demo endpoint
-├── handlers/
-│   ├── index.ts          # Intent router
-│   ├── expense.ts        # Log expenses + trigger budget alerts
-│   ├── query.ts          # Natural-language spending queries
-│   ├── budget.ts         # Set/view budgets + threshold alerts
-│   ├── edit.ts           # delete last / delete all / correct amount
-│   └── report.ts         # On-demand text + PDF reports
-├── services/
-│   ├── gemini.ts         # Parsing, intent, query & budget understanding
-│   ├── whatsapp.ts       # WhatsApp Cloud API (messages + media)
-│   ├── messenger.ts      # Outbound router: WhatsApp vs web buffer
-│   ├── db.ts             # Mongoose connection
-│   ├── report.ts         # Report data aggregation + text formatting
-│   ├── pdf.ts            # PDF statement generation
-│   ├── currency.ts       # Country-code → currency
-│   ├── dateRange.ts      # IST-aware date helpers
-│   └── cron.ts           # Monthly report + web-demo cleanup jobs
-└── models/
-    ├── Expense.ts
-    └── Budget.ts
-public/index.html         # Landing page + live web demo
-```
 
 ---
 
